@@ -19,6 +19,20 @@ struct Transform
     Transform (float p_x, float p_y, float p_z)
     : position (glm::vec3(p_x, p_y, p_z)) {}
 
+
+    void SetScale(float s_x, float s_y, float s_z)
+    {
+        scale = glm::vec3(s_x, s_y, s_z);
+    }
+
+
+    /*
+    void SetRotation(float r_x, float r_y, float r_z)
+    {
+        rotation = glm::vec3(s_x, s_y, s_z);
+    }
+    */
+
 };
 
 struct Keyboard

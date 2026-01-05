@@ -3,15 +3,22 @@
 #include "webgpu/webgpu.h"
 #include <kwgpu/karia.h>
 
+#include <imgui.h>
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_wgpu.h>
+
 #include <sdl3webgpu.h>
 #include <iostream>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
+//#include 
 
 // Systems
 #include <kwgpu/systems/movement.h>
+
+
 
 #define SDL_MAIN_HANDLED
 
@@ -138,6 +145,37 @@ void Karia::Start()
     shader_manager.SetDevice(device);
     mesh_manager.SetDevice(device);
 
+    // ImGui
+    // Setup Dear ImGui context
+
+    float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+    // Setup scaling
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForOther(window);
+
+    ImGui_ImplWGPU_InitInfo init_info;
+    init_info.Device = device;
+    init_info.NumFramesInFlight = 3;
+    init_info.RenderTargetFormat = surface_configuration.format;
+    init_info.DepthStencilFormat = WGPUTextureFormat_Depth24Plus;
+    ImGui_ImplWGPU_Init(&init_info);
+
+
     // Load Game
     Load();
 
@@ -153,7 +191,7 @@ void Karia::Load()
     mesh_manager.LoadMeshFromFile("cube", "data/models/cube.obj");
     mesh_manager.LoadMeshFromFile("bunny", "data/models/bunny.obj");
     mesh_manager.LoadMeshFromFile("circle", "data/models/player.obj");
-    mesh_manager.LoadMeshFromFile("plane", "data/models/plane.obj");
+    mesh_manager.LoadMeshFromFile("plane", "data/models/gato.obj");
 
     // Loading Shaders
     shader_manager.CreateShaderFromFile("basic", "data/shaders/basic.wgsl", format);
@@ -162,25 +200,27 @@ void Karia::Load()
     shader_manager.CreateShaderFromFile("error", "data/shaders/error.wgsl", format);
 
     // Player Entity
-    Entity player;
+    Entity player = Entity("Player");
     player.add_component<Transform>(0.0f, 0.0f, 0.0f);
     player.add_component<Keyboard>();
     player.add_component<Shader>("basic");
     player.add_component<Mesh>("circle");
 
     // Enemy Entity
-    Entity enemy;
+    Entity enemy = Entity("Cube");
     enemy.add_component<Transform>(-3.0f, -3.0f, 0.0f);
     enemy.add_component<Shader>("basic_2");
     enemy.add_component<Mesh>("cube");
 
-    Entity plane;
+    Entity plane = Entity("Plane");
     plane.add_component<Transform>(0.0f, 0.0f, 0.0f);
     plane.add_component<Shader>("basic_3");
     plane.add_component<Mesh>("plane");
 
+    plane.get_component<Transform>().SetScale(0.15f, 0.15f, 0.15f);
+    //plane.get_component<Transform>().SetRotation(0.15f, 0.15f, 0.15f);
 
-    Entity cam;
+    Entity cam = Entity("Camera");
     cam.add_component<Transform>(0.0f, 0.0f, 0.0f);
     cam.add_component<Camera>(player);
 
@@ -191,12 +231,14 @@ void Karia::Load()
 
     auto movement_system = std::make_shared<MovementSystem>(&entity_manager);
     system_manager.RegisterSystem(movement_system);
+
 }
 
 void Karia::Update()
 {
     while (SDL_PollEvent(&event))
     {
+        ImGui_ImplSDL3_ProcessEvent(&event);
         if (event.type == SDL_EVENT_QUIT)
             is_running = false;
 
@@ -217,6 +259,7 @@ void Karia::Draw()
     WGPUTextureView target_view = GetNextTextureView();
     if (!target_view)
         return ;
+
 
     WGPUCommandEncoderDescriptor encoder_descriptor = {};
     encoder_descriptor.nextInChain = nullptr;
@@ -289,7 +332,9 @@ void Karia::Draw()
             100.0f
     );
 
-
+    static float rot_x = 0.0f;
+    static float rot_y = 0.0f;
+    static float rot_z = 0.0f;
 
 
     // Render System
@@ -312,7 +357,13 @@ void Karia::Draw()
             // Transformations
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, transform.position);
-            model = glm::rotate(model, 3.14f, glm::vec3(0.0f, 1.0f, 0.0f));
+            model = glm::scale(model, transform.scale);
+
+            model = glm::rotate(model, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::rotate(model, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+            model = glm::rotate(model, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+            //model = glm::rotate(model, 3.14f, glm::vec3(1.0f, 0.0f, 0.0f));
 
 
             Uniforms uniforms;
@@ -326,12 +377,108 @@ void Karia::Draw()
 
             wgpuRenderPassEncoderSetVertexBuffer(renderpass_enconder, 0, mesh_data->buffer, 0, WGPU_WHOLE_SIZE);
             wgpuRenderPassEncoderDraw(renderpass_enconder, mesh_data->vertex_count, 1, 0, 0);
+
+
         }
     }
+    
+    ImGui_ImplWGPU_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
 
+    // Build our UI
+    {
+        static float f = 0.0f;
+        static int counter = 0;
+        static bool show_demo_window = true;
+        static bool show_another_window = false;
+        static ImVec4 clear_color = ImVec4(rot_x, rot_y, rot_x, 1.00f);
+
+        ImGui::Begin("Manager");
+    
+        // Create a window called "Hello, world!" and append into it.
+        //const char* items[] = { "Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pineapple", "Strawberry", "Watermelon" };
+
+        std::vector<std::string> names = entity_manager.GetActiveEntitiesNames();
+        std::vector<const char *> items;
+        for (auto& n: names)
+            items.push_back(n.c_str());
+            
+        static int selected = -1;
+
+        ImGui::Text("Entities");
+        ImGui::Separator();
+        ImGui::ListBox("##Entities", &selected, items.data(), items.size(), 5);
+
+        if (selected != -1)
+        {
+            static bool window = true;
+            ImGui::Begin("Properties", &window); 
+            ImGui::Text("Entity %s", items[selected]);
+            ImGui::Separator();
+
+
+            Entity *e = entity_manager.GetEntityByName(items[selected]);
+
+            // Keyboard
+            if (e->has_component<Keyboard>())
+            {
+                ImGui::SeparatorText("Keyboard");
+            }
+
+            // Transform
+            if (e->has_component<Transform>())
+            {
+
+                {
+                Transform& transform = e->get_component<Transform>();
+
+                ImGui::SeparatorText("Transform");
+
+                //ImGui::Text("Position");
+                ImGui::SliderFloat3("Position", glm::value_ptr(transform.position), -100.0f, 100.0f);
+                ImGui::SliderFloat3("Scale", glm::value_ptr(transform.scale), 0.0f, 5.0f);
+                ImGui::SliderFloat3("Rotation", glm::value_ptr(transform.rotation), 0.0f, 360.0f);
+
+                //ImGui::InputFloat3("##PositionInput", glm::value_ptr(transform.position));
+                }
+
+            }
+
+
+            // Mesh
+            if (e->has_component<Mesh>())
+            {
+                ImGui::SeparatorText("Mesh");
+            }
+
+            // Shader
+            if (e->has_component<Shader>())
+            {
+                ImGui::SeparatorText("Shader");
+            }
+
+            ImGui::End();
+        }
+
+
+
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("FPS: %.1f", io.Framerate);
+        ImGui::End();
+    }
+
+    // Draw the UI
+    ImGui::EndFrame();
+    // Convert the UI defined above into low-level drawing commands
+    ImGui::Render();
+    // Execute the low-level drawing commands on the WebGPU backend
+    ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), renderpass_enconder);
+    
+    
     wgpuRenderPassEncoderEnd(renderpass_enconder);
     wgpuRenderPassEncoderRelease(renderpass_enconder);
-
+    
     // Command Buffer
     WGPUCommandBufferDescriptor command_buffer_descriptor = {};
     command_buffer_descriptor.nextInChain = nullptr;
@@ -339,7 +486,7 @@ void Karia::Draw()
     WGPUCommandBuffer command_buffer;
     command_buffer = wgpuCommandEncoderFinish(command_encoder, &command_buffer_descriptor);
     wgpuCommandEncoderRelease(command_encoder);
-
+    
     wgpuQueueSubmit(queue, 1, &command_buffer);
     wgpuCommandBufferRelease(command_buffer);
 
@@ -357,7 +504,14 @@ WGPUTextureView Karia::GetNextTextureView()
     WGPUTextureView texture_view = nullptr;
 
     WGPUSurfaceTexture surface_texture;
+
     wgpuSurfaceGetCurrentTexture(surface, &surface_texture);
+
+    if (ImGui_ImplWGPU_IsSurfaceStatusError(surface_texture.status))
+    {
+        fprintf(stderr, "Unrecoverable Surface Texture status=%#.8x\n", surface_texture.status);
+        abort();
+    }
 
     // Wait to complete current texture
     if (surface_texture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)

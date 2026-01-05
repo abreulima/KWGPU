@@ -4,6 +4,7 @@
 #include <kwgpu/entity.h>
 #include <memory>
 #include <vector>
+#include <string>
 
 class EntityManager
 {
@@ -27,6 +28,28 @@ class EntityManager
             {
                 if (e.has_component<T>())
                     return &e;
+            }
+            return (nullptr);
+        }
+
+        std::vector<std::string> GetActiveEntitiesNames()
+        {
+            std::vector<std::string> names;
+
+            for (auto &e: entities)
+            {
+                names.push_back(e.name);
+            }
+
+            return (names);
+        }
+
+        Entity* GetEntityByName(std::string name)
+        {
+            for(auto &e: entities)
+            {
+                if (name.compare(e.name) == 0)
+                return (&e);
             }
             return (nullptr);
         }

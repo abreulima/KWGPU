@@ -14,6 +14,10 @@ class Entity
     std::string name;
     std::unordered_map<std::type_index, std::shared_ptr<void>> components;
 
+
+    Entity() {};
+    Entity(std::string name) : name(name) {};
+
     template <typename T, typename... Args>
     T& add_component(Args&&... args)
     {

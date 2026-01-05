@@ -26,6 +26,9 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 
 	out.position = uniforms.mvp * vec4f(in.position, 1.0);
 	out.normal = in.normal;
+    //out.normal = (viewMatrix * modelMatrix * vec4f(input.normal, 0.0)).xyz;
+
+
 	return out;
 }
 
