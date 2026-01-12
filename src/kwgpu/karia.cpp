@@ -189,16 +189,18 @@ void Karia::Start()
 void Karia::Load()
 {
     // Get Content From File
-
     shader_manager.SetSpriteManager(&sprite_manager);
-    sprite_manager.LoadSpriteFromFile("uv-texture", "data/sprites/uv-texture.png");
-
+    sprite_manager.LoadSpriteFromFile("uv-texture", "data/sprites/textures/GRASS_1A.PNG");
+    sprite_manager.LoadSpriteFromFile("iron_golem", "data/sprites/iron_golem.png");
+    sprite_manager.LoadSpriteFromFile("dingus", "data/sprites/dingus.png");
 
     // Loading Meshes
     mesh_manager.LoadMeshFromFile("cube", "data/models/cube.obj");
     mesh_manager.LoadMeshFromFile("bunny", "data/models/bunny.obj");
     mesh_manager.LoadMeshFromFile("circle", "data/models/player.obj");
-    mesh_manager.LoadMeshFromFile("plane", "data/models/gato.obj");
+    mesh_manager.LoadMeshFromFile("grass", "data/models/grass.obj");
+    mesh_manager.LoadMeshFromFile("golem", "data/models/iron_golem.obj");
+    mesh_manager.LoadMeshFromFile("dingus", "data/models/dingus.obj");
 
     // Loading Sprites
 
@@ -210,33 +212,40 @@ void Karia::Load()
 
     // Player Entity
     Entity player = Entity("Player");
+    player.add_component<Shader>("basic");
+    player.add_component<Mesh>("golem");
     player.add_component<Transform>(0.0f, 0.0f, 0.0f);
     player.add_component<Keyboard>();
-    player.add_component<Shader>("basic");
-    player.add_component<Mesh>("circle");
+    //player.get_component<Transform>().SetScale(0.05f, 0.05f, 0.05f);
 
     // Enemy Entity
-    Entity enemy = Entity("Cube");
-    enemy.add_component<Transform>(-3.0f, -3.0f, 0.0f);
-    enemy.add_component<Shader>("basic_2");
-    enemy.add_component<Mesh>("cube");
+    //Entity enemy = Entity("Cube");
+    //enemy.add_component<Transform>(-3.0f, -3.0f, 0.0f);
+    //enemy.add_component<Shader>("basic_2");
+    //enemy.add_component<Mesh>("cube");
 
     Entity plane = Entity("Plane");
     plane.add_component<Transform>(0.0f, 0.0f, 0.0f);
     plane.add_component<Shader>("basic_3");
-    plane.add_component<Mesh>("plane");
+    plane.add_component<Mesh>("grass");
 
-    plane.get_component<Transform>().SetScale(0.15f, 0.15f, 0.15f);
+    Entity outrobixo = Entity("Gato");
+    outrobixo.add_component<Transform>(0.0f, 0.0f, 0.0f);
+    outrobixo.add_component<Shader>("basic_3");
+    outrobixo.add_component<Mesh>("dingus");
+
+
     //plane.get_component<Transform>().SetRotation(0.15f, 0.15f, 0.15f);
 
     Entity cam = Entity("Camera");
     cam.add_component<Transform>(0.0f, 0.0f, 0.0f);
     cam.add_component<Camera>(player);
 
-    entity_manager.add_entitity(enemy);
+    //entity_manager.add_entitity(enemy);
     entity_manager.add_entitity(player);
     entity_manager.add_entitity(cam);
     entity_manager.add_entitity(plane);
+    entity_manager.add_entitity(outrobixo);
 
     auto movement_system = std::make_shared<MovementSystem>(&entity_manager);
     system_manager.RegisterSystem(movement_system);

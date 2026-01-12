@@ -28,7 +28,7 @@ class MovementSystem : public System
 
                     glm::vec3 direction = glm::vec3(0, 0, 0);
 
-                    float speed = 0.05f;
+                    float speed = 0.10f;
 
                     if (key_states[SDL_SCANCODE_W])
                         transform.position.x += speed;

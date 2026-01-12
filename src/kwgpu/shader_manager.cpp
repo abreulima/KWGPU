@@ -224,19 +224,20 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
 
     //
     // Create a sampler
-    WGPUSamplerDescriptor sampler_desc = {
-            .addressModeU = WGPUAddressMode_ClampToEdge,
-            .addressModeV = WGPUAddressMode_ClampToEdge,
-            .addressModeW = WGPUAddressMode_ClampToEdge,
-            .magFilter = WGPUFilterMode_Linear,
-            .minFilter = WGPUFilterMode_Linear,
-            .mipmapFilter = WGPUMipmapFilterMode_Nearest,
-            .lodMinClamp = 0.0f,
-            .lodMaxClamp = 1.0f,
-            .compare = WGPUCompareFunction_Undefined,
-            .maxAnisotropy = 1,
-        };
-	WGPUSampler sampler = wgpuDeviceCreateSampler(device, &sampler_desc);
+    WGPUSamplerDescriptor sampler_desc =
+    {
+        .addressModeU = WGPUAddressMode_ClampToEdge,
+        .addressModeV = WGPUAddressMode_ClampToEdge,
+        .addressModeW = WGPUAddressMode_ClampToEdge,
+        .magFilter = WGPUFilterMode_Nearest,
+        .minFilter = WGPUFilterMode_Nearest,
+        .mipmapFilter = WGPUMipmapFilterMode_Nearest,
+        .lodMinClamp = 0.0f,
+        .lodMaxClamp = 1.0f,
+        .compare = WGPUCompareFunction_Undefined,
+        .maxAnisotropy = 1,
+    };
+    WGPUSampler sampler = wgpuDeviceCreateSampler(device, &sampler_desc);
 
     std::vector<WGPUBindGroupEntry> bindings(3);
 
@@ -245,8 +246,10 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
     bindings[0].offset = 0;
     bindings[0].size = sizeof(Uniforms);
 
+    // uv-texture is default
     bindings[1].binding = 1;
-    bindings[1].textureView = sprite_manager->GetSprite("uv-texture")->texture_view;
+    bindings[1].textureView = sprite_manager->GetSprite("dingus")->texture_view;
+    //bindings[1].textureView = nullptr;
 
     bindings[2].binding = 2;
     bindings[2].sampler = sampler;
