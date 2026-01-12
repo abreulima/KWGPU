@@ -1,4 +1,3 @@
-#include "glm/ext/quaternion_transform.hpp"
 #include "kwgpu/components.h"
 #include "webgpu/webgpu.h"
 #include <kwgpu/karia.h>
@@ -13,7 +12,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
-//#include 
+//#include
 
 // Systems
 #include <kwgpu/systems/movement.h>
@@ -44,6 +43,9 @@ void Karia::Start()
         std::cerr << "Error: Unable to create window." << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    //SDL_SetWindowFullscreen(window, true);
+    //SDL_SetWindowFullscreen
 
     // Start WebGPU Config.
     // Instance
@@ -144,6 +146,7 @@ void Karia::Start()
     // Internal Config.
     shader_manager.SetDevice(device);
     mesh_manager.SetDevice(device);
+    sprite_manager.SetDevice(device);
 
     // ImGui
     // Setup Dear ImGui context
@@ -187,11 +190,17 @@ void Karia::Load()
 {
     // Get Content From File
 
+    shader_manager.SetSpriteManager(&sprite_manager);
+    sprite_manager.LoadSpriteFromFile("uv-texture", "data/sprites/uv-texture.png");
+
+
     // Loading Meshes
     mesh_manager.LoadMeshFromFile("cube", "data/models/cube.obj");
     mesh_manager.LoadMeshFromFile("bunny", "data/models/bunny.obj");
     mesh_manager.LoadMeshFromFile("circle", "data/models/player.obj");
     mesh_manager.LoadMeshFromFile("plane", "data/models/gato.obj");
+
+    // Loading Sprites
 
     // Loading Shaders
     shader_manager.CreateShaderFromFile("basic", "data/shaders/basic.wgsl", format);
@@ -332,11 +341,6 @@ void Karia::Draw()
             100.0f
     );
 
-    static float rot_x = 0.0f;
-    static float rot_y = 0.0f;
-    static float rot_z = 0.0f;
-
-
     // Render System
     for (auto &e : entity_manager.get_entities())
     {
@@ -381,7 +385,7 @@ void Karia::Draw()
 
         }
     }
-    
+
     ImGui_ImplWGPU_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
@@ -392,10 +396,9 @@ void Karia::Draw()
         static int counter = 0;
         static bool show_demo_window = true;
         static bool show_another_window = false;
-        static ImVec4 clear_color = ImVec4(rot_x, rot_y, rot_x, 1.00f);
 
         ImGui::Begin("Manager");
-    
+
         // Create a window called "Hello, world!" and append into it.
         //const char* items[] = { "Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pineapple", "Strawberry", "Watermelon" };
 
@@ -403,7 +406,7 @@ void Karia::Draw()
         std::vector<const char *> items;
         for (auto& n: names)
             items.push_back(n.c_str());
-            
+
         static int selected = -1;
 
         ImGui::Text("Entities");
@@ -413,7 +416,7 @@ void Karia::Draw()
         if (selected != -1)
         {
             static bool window = true;
-            ImGui::Begin("Properties", &window); 
+            ImGui::Begin("Properties", &window);
             ImGui::Text("Entity %s", items[selected]);
             ImGui::Separator();
 
@@ -474,11 +477,11 @@ void Karia::Draw()
     ImGui::Render();
     // Execute the low-level drawing commands on the WebGPU backend
     ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), renderpass_enconder);
-    
-    
+
+
     wgpuRenderPassEncoderEnd(renderpass_enconder);
     wgpuRenderPassEncoderRelease(renderpass_enconder);
-    
+
     // Command Buffer
     WGPUCommandBufferDescriptor command_buffer_descriptor = {};
     command_buffer_descriptor.nextInChain = nullptr;
@@ -486,7 +489,7 @@ void Karia::Draw()
     WGPUCommandBuffer command_buffer;
     command_buffer = wgpuCommandEncoderFinish(command_encoder, &command_buffer_descriptor);
     wgpuCommandEncoderRelease(command_encoder);
-    
+
     wgpuQueueSubmit(queue, 1, &command_buffer);
     wgpuCommandBufferRelease(command_buffer);
 

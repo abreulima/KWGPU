@@ -14,6 +14,12 @@ void ShaderManager::SetDevice(WGPUDevice device)
     this->device = device;
 }
 
+
+void ShaderManager::SetSpriteManager(SpriteManager *sprite_manager)
+{
+    this->sprite_manager = sprite_manager;
+}
+
 WGPURenderPipeline ShaderManager::GetShader(std::string name)
 {
     return (pipelines[name].pipeline);
@@ -86,15 +92,28 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
     shader_data.uniform_buffer = wgpuDeviceCreateBuffer(device, &buffer_descriptor);
 
     /* Bind Group Layout Creation */
-    WGPUBindGroupLayoutEntry bind_group_layout_entry = {};
-    bind_group_layout_entry.binding = 0;
-    bind_group_layout_entry.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
-    bind_group_layout_entry.buffer.type = WGPUBufferBindingType_Uniform;
-    bind_group_layout_entry.buffer.minBindingSize = sizeof(Uniforms);
+    std::vector<WGPUBindGroupLayoutEntry> binding_layout_entries(3);
+
+    // Uniform Buffer
+    binding_layout_entries[0].binding = 0;
+    binding_layout_entries[0].visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
+    binding_layout_entries[0].buffer.type = WGPUBufferBindingType_Uniform;
+    binding_layout_entries[0].buffer.minBindingSize = sizeof(Uniforms);
+
+    // Texture View
+    binding_layout_entries[1].binding = 1;
+    binding_layout_entries[1].visibility = WGPUShaderStage_Fragment;
+    binding_layout_entries[1].texture.sampleType = WGPUTextureSampleType_Float;
+    binding_layout_entries[1].texture.viewDimension = WGPUTextureViewDimension_2D;
+
+    // Sampler Texture
+    binding_layout_entries[2].binding = 2;
+    binding_layout_entries[2].visibility = WGPUShaderStage_Fragment;
+    binding_layout_entries[2].sampler.type = WGPUSamplerBindingType_Filtering;
 
     WGPUBindGroupLayoutDescriptor bind_group_layout_descriptor = {};
-    bind_group_layout_descriptor.entryCount = 1;
-    bind_group_layout_descriptor.entries = &bind_group_layout_entry;
+    bind_group_layout_descriptor.entryCount = (uint32_t)binding_layout_entries.size();
+    bind_group_layout_descriptor.entries = binding_layout_entries.data();
     WGPUBindGroupLayout bind_group_layout = wgpuDeviceCreateBindGroupLayout(device, &bind_group_layout_descriptor);
 
     // Create Bind group
@@ -202,15 +221,44 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
 
     shader_data.pipeline = wgpuDeviceCreateRenderPipeline(device, &render_pipeline_descriptor);
 
-    WGPUBindGroupEntry bind_group_entry = {};
-    bind_group_entry.binding = 0;
-    bind_group_entry.buffer = shader_data.uniform_buffer;
-    bind_group_entry.size = sizeof(Uniforms);
+
+    //
+    // Create a sampler
+    WGPUSamplerDescriptor sampler_desc = {
+            .addressModeU = WGPUAddressMode_ClampToEdge,
+            .addressModeV = WGPUAddressMode_ClampToEdge,
+            .addressModeW = WGPUAddressMode_ClampToEdge,
+            .magFilter = WGPUFilterMode_Linear,
+            .minFilter = WGPUFilterMode_Linear,
+            .mipmapFilter = WGPUMipmapFilterMode_Nearest,
+            .lodMinClamp = 0.0f,
+            .lodMaxClamp = 1.0f,
+            .compare = WGPUCompareFunction_Undefined,
+            .maxAnisotropy = 1,
+        };
+	WGPUSampler sampler = wgpuDeviceCreateSampler(device, &sampler_desc);
+
+    std::vector<WGPUBindGroupEntry> bindings(3);
+
+    bindings[0].binding = 0;
+    bindings[0].buffer = shader_data.uniform_buffer;
+    bindings[0].offset = 0;
+    bindings[0].size = sizeof(Uniforms);
+
+    bindings[1].binding = 1;
+    bindings[1].textureView = sprite_manager->GetSprite("uv-texture")->texture_view;
+
+    bindings[2].binding = 2;
+    bindings[2].sampler = sampler;
+
+    //std::cout << sprite_manager->GetSprite("uv-texture")->texture_view << std::endl;
+    //bindings[1].textureView = nullptr;
+
 
     WGPUBindGroupDescriptor bind_group_descriptor = {};
     bind_group_descriptor.layout = bind_group_layout;
-    bind_group_descriptor.entryCount = 1;
-    bind_group_descriptor.entries = &bind_group_entry;
+    bind_group_descriptor.entryCount = (uint32_t)bindings.size();
+    bind_group_descriptor.entries = bindings.data();
     shader_data.bind_group = wgpuDeviceCreateBindGroup(device, &bind_group_descriptor);
 
     // Add to unordered map

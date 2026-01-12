@@ -3,6 +3,7 @@
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/vector_float4.hpp"
+#include "kwgpu/sprite_manager.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -27,11 +28,13 @@ class ShaderManager
 {
     private:
         WGPUDevice device = nullptr;
+        SpriteManager *sprite_manager = nullptr;
 
     public:
         std::unordered_map<std::string, ShaderData> pipelines;
 
         void SetDevice(WGPUDevice device);
+        void SetSpriteManager(SpriteManager *sprite_manager);
 
         WGPURenderPipeline GetShader(std::string name);
         WGPUBindGroup GetBindGroup(std::string name);

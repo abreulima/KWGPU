@@ -1,12 +1,14 @@
 #ifndef KARIA_H
 #define KARIA_H
 
+#include "sprite_manager.h"
 #include <webgpu/webgpu.h>
 #include <SDL3/SDL.h>
 
 #include <kwgpu/entity_manager.h>
 #include <kwgpu/shader_manager.h>
 #include <kwgpu/mesh_manager.h>
+#include <kwgpu/sprite_manager.h>
 #include <kwgpu/systems/system_manager.h>
 
 class Karia
@@ -42,8 +44,10 @@ class Karia
     EntityManager entity_manager;
     SystemManager system_manager;
 
+    // Asset Managers
     ShaderManager shader_manager;
     MeshManager mesh_manager;
+    SpriteManager sprite_manager;
 
     // Methods
     Karia();

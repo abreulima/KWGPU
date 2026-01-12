@@ -40,6 +40,17 @@ struct Keyboard
 
 };
 
+struct Sprite
+{
+    std::string sprite_name;
+    float w;
+    float h;
+
+    Sprite(std::string name)
+    : sprite_name(name) {};
+
+};
+
 struct Camera
 {
     Entity target;
