@@ -15,6 +15,7 @@ struct ShaderData
     WGPURenderPipeline pipeline;
     WGPUBuffer uniform_buffer;
     WGPUBindGroup bind_group;
+    WGPUBindGroupLayout bind_group_layout;
 };
 
 struct Uniforms
@@ -36,7 +37,7 @@ class ShaderManager
         void SetDevice(WGPUDevice device);
         void SetSpriteManager(SpriteManager *sprite_manager);
 
-        WGPURenderPipeline GetShader(std::string name);
+        ShaderData GetShader(std::string name);
         WGPUBindGroup GetBindGroup(std::string name);
         WGPUBuffer GetUniformBuffer(std::string name);
 

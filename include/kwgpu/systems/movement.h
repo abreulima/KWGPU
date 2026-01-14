@@ -42,6 +42,7 @@ class MovementSystem : public System
                     if (key_states[SDL_SCANCODE_D])
                         transform.position.z -= speed;
 
+
                 }
             }
         }

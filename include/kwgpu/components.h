@@ -40,6 +40,16 @@ struct Keyboard
 
 };
 
+struct UISprite
+{
+    std::string uisprite_name;
+    float w;
+    float h;
+
+    UISprite(std::string name)
+    : uisprite_name(name) {};
+};
+
 struct Sprite
 {
     std::string sprite_name;

@@ -1,4 +1,6 @@
+#include "SDL3/SDL_scancode.h"
 #include "kwgpu/components.h"
+#include "kwgpu/sprite_manager.h"
 #include "webgpu/webgpu.h"
 #include <kwgpu/karia.h>
 
@@ -37,7 +39,7 @@ void Karia::Start()
         exit(EXIT_FAILURE);
     }
 
-    window = SDL_CreateWindow("Hello Karia", 800, 600, 0);
+    window = SDL_CreateWindow("Hello Karia", 1920, 1080, 0);
     if (!window)
     {
         std::cerr << "Error: Unable to create window." << std::endl;
@@ -186,72 +188,6 @@ void Karia::Start()
     std::cout << "Start done." << std::endl;
 }
 
-void Karia::Load()
-{
-    // Get Content From File
-    shader_manager.SetSpriteManager(&sprite_manager);
-    sprite_manager.LoadSpriteFromFile("uv-texture", "data/sprites/textures/GRASS_1A.PNG");
-    sprite_manager.LoadSpriteFromFile("iron_golem", "data/sprites/iron_golem.png");
-    sprite_manager.LoadSpriteFromFile("dingus", "data/sprites/dingus.png");
-
-    // Loading Meshes
-    mesh_manager.LoadMeshFromFile("cube", "data/models/cube.obj");
-    mesh_manager.LoadMeshFromFile("bunny", "data/models/bunny.obj");
-    mesh_manager.LoadMeshFromFile("circle", "data/models/player.obj");
-    mesh_manager.LoadMeshFromFile("grass", "data/models/grass.obj");
-    mesh_manager.LoadMeshFromFile("golem", "data/models/iron_golem.obj");
-    mesh_manager.LoadMeshFromFile("dingus", "data/models/dingus.obj");
-
-    // Loading Sprites
-
-    // Loading Shaders
-    shader_manager.CreateShaderFromFile("basic", "data/shaders/basic.wgsl", format);
-    shader_manager.CreateShaderFromFile("basic_2", "data/shaders/basic.wgsl", format);
-    shader_manager.CreateShaderFromFile("basic_3", "data/shaders/basic.wgsl", format);
-    shader_manager.CreateShaderFromFile("error", "data/shaders/error.wgsl", format);
-
-    // Player Entity
-    Entity player = Entity("Player");
-    player.add_component<Shader>("basic");
-    player.add_component<Mesh>("golem");
-    player.add_component<Transform>(0.0f, 0.0f, 0.0f);
-    player.add_component<Keyboard>();
-    //player.get_component<Transform>().SetScale(0.05f, 0.05f, 0.05f);
-
-    // Enemy Entity
-    //Entity enemy = Entity("Cube");
-    //enemy.add_component<Transform>(-3.0f, -3.0f, 0.0f);
-    //enemy.add_component<Shader>("basic_2");
-    //enemy.add_component<Mesh>("cube");
-
-    Entity plane = Entity("Plane");
-    plane.add_component<Transform>(0.0f, 0.0f, 0.0f);
-    plane.add_component<Shader>("basic_3");
-    plane.add_component<Mesh>("grass");
-
-    Entity outrobixo = Entity("Gato");
-    outrobixo.add_component<Transform>(0.0f, 0.0f, 0.0f);
-    outrobixo.add_component<Shader>("basic_3");
-    outrobixo.add_component<Mesh>("dingus");
-
-
-    //plane.get_component<Transform>().SetRotation(0.15f, 0.15f, 0.15f);
-
-    Entity cam = Entity("Camera");
-    cam.add_component<Transform>(0.0f, 0.0f, 0.0f);
-    cam.add_component<Camera>(player);
-
-    //entity_manager.add_entitity(enemy);
-    entity_manager.add_entitity(player);
-    entity_manager.add_entitity(cam);
-    entity_manager.add_entitity(plane);
-    entity_manager.add_entitity(outrobixo);
-
-    auto movement_system = std::make_shared<MovementSystem>(&entity_manager);
-    system_manager.RegisterSystem(movement_system);
-
-}
-
 void Karia::Update()
 {
     while (SDL_PollEvent(&event))
@@ -338,8 +274,15 @@ void Karia::Draw()
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
 
-    float aspect = 800.0f / 600.0f;
-    float zoom = 5.0f;
+    float aspect = 1920.0f / 1080.0f;
+    static float zoom = 5.0f;
+
+    const bool *key_states = SDL_GetKeyboardState(nullptr);
+    if (key_states[SDL_SCANCODE_PAGEUP])
+        zoom += 0.2f;
+    if (key_states[SDL_SCANCODE_PAGEDOWN])
+        zoom -= 0.2f;
+
 
     glm::mat4 projection = glm::ortho(
         -zoom * aspect,
@@ -353,16 +296,18 @@ void Karia::Draw()
     // Render System
     for (auto &e : entity_manager.get_entities())
     {
-        if (e.has_component<Shader>() && e.has_component<Transform>() && e.has_component<Mesh>())
+        if (e.has_component<Shader>() && e.has_component<Transform>() && e.has_component<Mesh>() && e.has_component<Sprite>())
         {
             // Resources
             std::string shader_name = e.get_component<Shader>().shader_name;
             std::string mesh_name = e.get_component<Mesh>().mesh_name;
+            std::string sprite_name = e.get_component<Sprite>().sprite_name;
 
-            auto render_pipeline = shader_manager.GetShader(shader_name);
+            auto shader_data = shader_manager.GetShader(shader_name);
             auto uniform_buffer = shader_manager.GetUniformBuffer(shader_name);
             auto bind_group = shader_manager.GetBindGroup(shader_name);
             auto mesh_data = mesh_manager.GetMesh(mesh_name);
+            auto sprite_data = sprite_manager.GetSprite(sprite_name);
 
             // Components
             Transform transform = e.get_component<Transform>();
@@ -378,6 +323,7 @@ void Karia::Draw()
 
             //model = glm::rotate(model, 3.14f, glm::vec3(1.0f, 0.0f, 0.0f));
 
+            wgpuRenderPassEncoderSetPipeline(renderpass_enconder, shader_data.pipeline);
 
             Uniforms uniforms;
             uniforms.mvp = projection * view * model;
@@ -385,8 +331,48 @@ void Karia::Draw()
             wgpuQueueWriteBuffer(queue, uniform_buffer, 0, &uniforms, sizeof(Uniforms));
 
 
-            wgpuRenderPassEncoderSetPipeline(renderpass_enconder, render_pipeline);
-            wgpuRenderPassEncoderSetBindGroup(renderpass_enconder, 0, bind_group, 0, nullptr);
+            // Create a sampler
+            WGPUSamplerDescriptor sampler_desc =
+            {
+                .addressModeU = WGPUAddressMode_ClampToEdge,
+                .addressModeV = WGPUAddressMode_ClampToEdge,
+                .addressModeW = WGPUAddressMode_ClampToEdge,
+                .magFilter = WGPUFilterMode_Nearest,
+                .minFilter = WGPUFilterMode_Nearest,
+                .mipmapFilter = WGPUMipmapFilterMode_Nearest,
+                .lodMinClamp = 0.0f,
+                .lodMaxClamp = 1.0f,
+                .compare = WGPUCompareFunction_Undefined,
+                .maxAnisotropy = 1,
+            };
+            WGPUSampler sampler = wgpuDeviceCreateSampler(device, &sampler_desc);
+
+            std::vector<WGPUBindGroupEntry> bindings(3);
+
+            bindings[0].binding = 0;
+            bindings[0].buffer = shader_data.uniform_buffer;
+            bindings[0].offset = 0;
+            bindings[0].size = sizeof(Uniforms);
+
+            // uv-texture is default
+            bindings[1].binding = 1;
+            bindings[1].textureView = sprite_data->texture_view;
+            //bindings[1].textureView = nullptr;
+
+            bindings[2].binding = 2;
+            bindings[2].sampler = sampler;
+
+            //std::cout << sprite_manager->GetSprite("uv-texture")->texture_view << std::endl;
+            //bindings[1].textureView = nullptr;
+
+
+            WGPUBindGroupDescriptor bind_group_descriptor = {};
+            bind_group_descriptor.layout = shader_data.bind_group_layout;
+            bind_group_descriptor.entryCount = (uint32_t)bindings.size();
+            bind_group_descriptor.entries = bindings.data();
+            shader_data.bind_group = wgpuDeviceCreateBindGroup(device, &bind_group_descriptor);
+
+            wgpuRenderPassEncoderSetBindGroup(renderpass_enconder, 0, shader_data.bind_group, 0, nullptr);
 
             wgpuRenderPassEncoderSetVertexBuffer(renderpass_enconder, 0, mesh_data->buffer, 0, WGPU_WHOLE_SIZE);
             wgpuRenderPassEncoderDraw(renderpass_enconder, mesh_data->vertex_count, 1, 0, 0);

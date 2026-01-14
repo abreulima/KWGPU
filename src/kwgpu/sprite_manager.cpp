@@ -24,7 +24,6 @@ void SpriteManager::writeMipMaps(WGPUDevice device, WGPUTexture texture, WGPUExt
     data_layout.rowsPerImage = textureSize.height;
 
     WGPUQueue queue = wgpuDeviceGetQueue(device);
-    std::cout << "Widht: " << textureSize.width << "Height: " << textureSize.height << std::endl;
 
     wgpuQueueWriteTexture(queue, &destination, pixel_data, 4 * textureSize.width * textureSize.height, &data_layout, &textureSize);
     wgpuQueueRelease(queue);
@@ -36,15 +35,12 @@ std::shared_ptr<SpriteData> SpriteManager::LoadSpriteFromFile(std::string name, 
 
     std::shared_ptr<SpriteData> sprite = std::make_shared<SpriteData>();
 
+    stbi_set_flip_vertically_on_load(true);
     unsigned char *pixel_data = stbi_load(file, &width, &height, &channels, 4);
     if (nullptr == pixel_data)
     {
         std::cerr << "Failed to load image " << file << std::endl;
         return (nullptr);
-    }
-    else
-    {
-        std::cout << "Image " << width << height << std::endl;
     }
 
     WGPUTextureDescriptor texture_descriptor = {};

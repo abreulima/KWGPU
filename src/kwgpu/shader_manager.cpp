@@ -20,10 +20,11 @@ void ShaderManager::SetSpriteManager(SpriteManager *sprite_manager)
     this->sprite_manager = sprite_manager;
 }
 
-WGPURenderPipeline ShaderManager::GetShader(std::string name)
+ShaderData ShaderManager::GetShader(std::string name)
 {
-    return (pipelines[name].pipeline);
+    return (pipelines[name]);
 }
+
 WGPUBindGroup ShaderManager::GetBindGroup(std::string name)
 {
     return (pipelines[name].bind_group);
@@ -114,7 +115,7 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
     WGPUBindGroupLayoutDescriptor bind_group_layout_descriptor = {};
     bind_group_layout_descriptor.entryCount = (uint32_t)binding_layout_entries.size();
     bind_group_layout_descriptor.entries = binding_layout_entries.data();
-    WGPUBindGroupLayout bind_group_layout = wgpuDeviceCreateBindGroupLayout(device, &bind_group_layout_descriptor);
+    shader_data.bind_group_layout = wgpuDeviceCreateBindGroupLayout(device, &bind_group_layout_descriptor);
 
     // Create Bind group
 
@@ -135,7 +136,7 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
     // Create Pipeline Layout
     WGPUPipelineLayoutDescriptor pipeline_layout_descriptor = {};
     pipeline_layout_descriptor.bindGroupLayoutCount = 1;
-    pipeline_layout_descriptor.bindGroupLayouts = &bind_group_layout;
+    pipeline_layout_descriptor.bindGroupLayouts = &shader_data.bind_group_layout;
     WGPUPipelineLayout pipeline_layout = wgpuDeviceCreatePipelineLayout(device, &pipeline_layout_descriptor);
 
     // RenderPipeline
@@ -220,49 +221,6 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
     render_pipeline_descriptor.multisample.alphaToCoverageEnabled = false;
 
     shader_data.pipeline = wgpuDeviceCreateRenderPipeline(device, &render_pipeline_descriptor);
-
-
-    //
-    // Create a sampler
-    WGPUSamplerDescriptor sampler_desc =
-    {
-        .addressModeU = WGPUAddressMode_ClampToEdge,
-        .addressModeV = WGPUAddressMode_ClampToEdge,
-        .addressModeW = WGPUAddressMode_ClampToEdge,
-        .magFilter = WGPUFilterMode_Nearest,
-        .minFilter = WGPUFilterMode_Nearest,
-        .mipmapFilter = WGPUMipmapFilterMode_Nearest,
-        .lodMinClamp = 0.0f,
-        .lodMaxClamp = 1.0f,
-        .compare = WGPUCompareFunction_Undefined,
-        .maxAnisotropy = 1,
-    };
-    WGPUSampler sampler = wgpuDeviceCreateSampler(device, &sampler_desc);
-
-    std::vector<WGPUBindGroupEntry> bindings(3);
-
-    bindings[0].binding = 0;
-    bindings[0].buffer = shader_data.uniform_buffer;
-    bindings[0].offset = 0;
-    bindings[0].size = sizeof(Uniforms);
-
-    // uv-texture is default
-    bindings[1].binding = 1;
-    bindings[1].textureView = sprite_manager->GetSprite("dingus")->texture_view;
-    //bindings[1].textureView = nullptr;
-
-    bindings[2].binding = 2;
-    bindings[2].sampler = sampler;
-
-    //std::cout << sprite_manager->GetSprite("uv-texture")->texture_view << std::endl;
-    //bindings[1].textureView = nullptr;
-
-
-    WGPUBindGroupDescriptor bind_group_descriptor = {};
-    bind_group_descriptor.layout = bind_group_layout;
-    bind_group_descriptor.entryCount = (uint32_t)bindings.size();
-    bind_group_descriptor.entries = bindings.data();
-    shader_data.bind_group = wgpuDeviceCreateBindGroup(device, &bind_group_descriptor);
 
     // Add to unordered map
     pipelines[name] = shader_data;

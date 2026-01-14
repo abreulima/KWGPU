@@ -58,7 +58,7 @@ std::shared_ptr<MeshData> MeshManager::LoadMeshFromFile(std::string name, const 
 			{
 			    v.text_coord = {
 					attributes.texcoords[2 * index.texcoord_index + 0],
-					1 - attributes.texcoords[2 * index.texcoord_index + 1]
+					attributes.texcoords[2 * index.texcoord_index + 1]
 				};
 			}
 			else
