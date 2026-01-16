@@ -46,6 +46,8 @@ void Karia::Start()
         exit(EXIT_FAILURE);
     }
 
+    SDL_SetWindowBordered(window, false);
+
     //SDL_SetWindowFullscreen(window, true);
     //SDL_SetWindowFullscreen
 

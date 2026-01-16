@@ -16,19 +16,34 @@ void Karia::Load()
     sprite_manager.LoadSpriteFromFile("dingus", "data/sprites/dingus.png");
     sprite_manager.LoadSpriteFromFile("variation-a", "data/sprites/variation-a.png");
 
+
+    sprite_manager.LoadSpriteFromFile("Floor_A_D", "data/sprites/Floor_A_D.png");
+
     // Loading Meshes
+    /*
     mesh_manager.LoadMeshFromFile("cube", "data/models/cube.obj");
     mesh_manager.LoadMeshFromFile("bunny", "data/models/bunny.obj");
     mesh_manager.LoadMeshFromFile("circle", "data/models/player.obj");
     mesh_manager.LoadMeshFromFile("grass", "data/models/grass.obj");
-    mesh_manager.LoadMeshFromFile("golem", "data/models/iron_golem.obj");
     mesh_manager.LoadMeshFromFile("dingus", "data/models/dingus.obj");
     mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
     mesh_manager.LoadMeshFromFile("floor", "data/models/square-1x.obj");
+    */
+
+    mesh_manager.LoadMeshFromFile("golem", "data/models/kenney/iron_golem.obj");
+
+    mesh_manager.LoadMeshFromFile("floor_A", "data/models/tileset/floor_A.obj");
+    mesh_manager.LoadMeshFromFile("floor_B", "data/models/tileset/floor_B.obj");
+    mesh_manager.LoadMeshFromFile("floor_C", "data/models/tileset/floor_C.obj");
+    mesh_manager.LoadMeshFromFile("floor_border_corner_A", "data/models/tileset/floor_border_corner_A.obj");
+    mesh_manager.LoadMeshFromFile("floor_border_corner_B", "data/models/tileset/floor_border_corner_B.obj");
+    mesh_manager.LoadMeshFromFile("floor_border_middle_A", "data/models/tileset/floor_border_middle_A.obj");
+    mesh_manager.LoadMeshFromFile("floor_border_middle_B", "data/models/tileset/floor_border_middle_B.obj");
+    mesh_manager.LoadMeshFromFile("floor_border_middle_C", "data/models/tileset/floor_border_middle_C.obj");
     //esh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
 
     // Models from Kenney
-    mesh_manager.LoadMeshFromFile("block-grass-overhang-low-large", "data/models/block-grass-overhang-low-large.obj");
+    //mesh_manager.LoadMeshFromFile("block-grass-overhang-low-large", "data/models/block-grass-overhang-low-large.obj");
     //mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
     //mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
     //mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
@@ -48,7 +63,7 @@ void Karia::Load()
     // Player Entity
     Entity player = Entity("Player");
     player.add_component<Shader>("basic");
-    player.add_component<Mesh>("block-grass-overhang-low-large");
+    player.add_component<Mesh>("golem");
     player.add_component<Sprite>("iron_golem");
     player.add_component<Transform>(0.0f, 0.01f, 0.0f);
     player.add_component<Keyboard>();
@@ -88,17 +103,17 @@ void Karia::Load()
     cam.add_component<Camera>(player);
 
 
-    for (int j = 0; j < 10; j++)
+    for (int j = 0; j < 5; j++)
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 5; i++)
         {
             std::string name = "floor" + std::to_string(i);
             Entity floor = Entity(name);
 
-            floor.add_component<Transform>(i * (2.0f + 0.25f) , 0, j * (2.0f + 0.25f));
-            floor.add_component<Mesh>("block-grass-overhang-low-large");
+            floor.add_component<Transform>(i * (2.0f) , 0, j * (2.0f));
+            floor.add_component<Mesh>("floor_A");
             floor.add_component<Shader>("floor");
-            floor.add_component<Sprite>("variation-a");
+            floor.add_component<Sprite>("Floor_A_D");
 
             entity_manager.add_entitity(floor);
         }
