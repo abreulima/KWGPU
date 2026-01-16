@@ -87,6 +87,7 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
     ShaderData shader_data;
 
     /* Uniform Buffer Creation */
+
     WGPUBufferDescriptor buffer_descriptor = {};
     buffer_descriptor.size = sizeof(Uniforms);
     buffer_descriptor.usage = WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst;
@@ -97,6 +98,7 @@ ShaderData ShaderManager::CreateShader(std::string name, const char *shader_code
 
     // Uniform Buffer
     binding_layout_entries[0].binding = 0;
+    //binding_layout_entries[0].buffer.hasDynamicOffset = true;
     binding_layout_entries[0].visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
     binding_layout_entries[0].buffer.type = WGPUBufferBindingType_Uniform;
     binding_layout_entries[0].buffer.minBindingSize = sizeof(Uniforms);

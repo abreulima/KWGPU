@@ -304,7 +304,7 @@ void Karia::Draw()
             std::string sprite_name = e.get_component<Sprite>().sprite_name;
 
             auto shader_data = shader_manager.GetShader(shader_name);
-            auto uniform_buffer = shader_manager.GetUniformBuffer(shader_name);
+            //auto uniform_buffer = shader_manager.GetUniformBuffer(shader_name);
             auto bind_group = shader_manager.GetBindGroup(shader_name);
             auto mesh_data = mesh_manager.GetMesh(mesh_name);
             auto sprite_data = sprite_manager.GetSprite(sprite_name);
@@ -328,7 +328,6 @@ void Karia::Draw()
             Uniforms uniforms;
             uniforms.mvp = projection * view * model;
 
-            wgpuQueueWriteBuffer(queue, uniform_buffer, 0, &uniforms, sizeof(Uniforms));
 
 
             // Create a sampler
@@ -347,10 +346,15 @@ void Karia::Draw()
             };
             WGPUSampler sampler = wgpuDeviceCreateSampler(device, &sampler_desc);
 
+            WGPUBufferDescriptor buffer_descriptor = {};
+            buffer_descriptor.size = sizeof(Uniforms);
+            buffer_descriptor.usage = WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst;
+            auto uniform_buffer = wgpuDeviceCreateBuffer(device, &buffer_descriptor);
+
             std::vector<WGPUBindGroupEntry> bindings(3);
 
             bindings[0].binding = 0;
-            bindings[0].buffer = shader_data.uniform_buffer;
+            bindings[0].buffer = uniform_buffer;
             bindings[0].offset = 0;
             bindings[0].size = sizeof(Uniforms);
 
@@ -361,6 +365,8 @@ void Karia::Draw()
 
             bindings[2].binding = 2;
             bindings[2].sampler = sampler;
+
+            wgpuQueueWriteBuffer(queue, uniform_buffer, 0, &uniforms, sizeof(Uniforms));
 
             //std::cout << sprite_manager->GetSprite("uv-texture")->texture_view << std::endl;
             //bindings[1].textureView = nullptr;

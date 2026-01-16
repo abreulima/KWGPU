@@ -14,6 +14,7 @@ void Karia::Load()
     sprite_manager.LoadSpriteFromFile("dingus", "data/sprites/dingus.png");
     sprite_manager.LoadSpriteFromFile("cross", "data/sprites/grave.png");
     sprite_manager.LoadSpriteFromFile("dingus", "data/sprites/dingus.png");
+    sprite_manager.LoadSpriteFromFile("variation-a", "data/sprites/variation-a.png");
 
     // Loading Meshes
     mesh_manager.LoadMeshFromFile("cube", "data/models/cube.obj");
@@ -23,6 +24,15 @@ void Karia::Load()
     mesh_manager.LoadMeshFromFile("golem", "data/models/iron_golem.obj");
     mesh_manager.LoadMeshFromFile("dingus", "data/models/dingus.obj");
     mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
+    mesh_manager.LoadMeshFromFile("floor", "data/models/square-1x.obj");
+    //esh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
+
+    // Models from Kenney
+    mesh_manager.LoadMeshFromFile("block-grass-overhang-low-large", "data/models/block-grass-overhang-low-large.obj");
+    //mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
+    //mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
+    //mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
+
 
     // Loading Sprites
 
@@ -33,20 +43,22 @@ void Karia::Load()
     shader_manager.CreateShaderFromFile("error", "data/shaders/error.wgsl", format);
     shader_manager.CreateShaderFromFile("cross", "data/shaders/basic.wgsl", format);
 
+    shader_manager.CreateShaderFromFile("floor", "data/shaders/basic.wgsl", format);
+
     // Player Entity
     Entity player = Entity("Player");
     player.add_component<Shader>("basic");
-    player.add_component<Mesh>("golem");
+    player.add_component<Mesh>("block-grass-overhang-low-large");
     player.add_component<Sprite>("iron_golem");
-    player.add_component<Transform>(0.0f, 0.0f, 0.0f);
+    player.add_component<Transform>(0.0f, 0.01f, 0.0f);
     player.add_component<Keyboard>();
 
     // grass Entity
     Entity grass = Entity("Grass");
     grass.add_component<Transform>(-3.0f, -3.0f, 0.0f);
-    grass.add_component<Sprite>("grass");
+    grass.add_component<Sprite>("variation-a");
+    grass.add_component<Mesh>("block-grass-overhang-low-large");
     grass.add_component<Shader>("basic_2");
-    grass.add_component<Mesh>("grass");
 
     Entity cross = Entity("Cross");
     cross.add_component<Transform>(0.0f, 0.0f, 0.0f);
@@ -75,12 +87,29 @@ void Karia::Load()
     cam.add_component<Transform>(0.0f, 0.0f, 0.0f);
     cam.add_component<Camera>(player);
 
+
+    for (int j = 0; j < 10; j++)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            std::string name = "floor" + std::to_string(i);
+            Entity floor = Entity(name);
+
+            floor.add_component<Transform>(i * (2.0f + 0.25f) , 0, j * (2.0f + 0.25f));
+            floor.add_component<Mesh>("block-grass-overhang-low-large");
+            floor.add_component<Shader>("floor");
+            floor.add_component<Sprite>("variation-a");
+
+            entity_manager.add_entitity(floor);
+        }
+    }
+
     //entity_manager.add_entitity(grass);
     entity_manager.add_entitity(player);
     entity_manager.add_entitity(cam);
-    entity_manager.add_entitity(grass);
+    //entity_manager.add_entitity(grass);
     //entity_manager.add_entitity(outrobixo);
-    entity_manager.add_entitity(cross);
+    //entity_manager.add_entitity(cross);
 
     auto movement_system = std::make_shared<MovementSystem>(&entity_manager);
     system_manager.RegisterSystem(movement_system);
