@@ -1,7 +1,9 @@
 #ifndef KARIA_H
 #define KARIA_H
 
+#include "kwgpu/camera.h"
 #include "sprite_manager.h"
+#include <memory>
 #include <webgpu/webgpu.h>
 #include <SDL3/SDL.h>
 
@@ -30,6 +32,8 @@ class Karia
 
     // General
     bool is_running;
+    std::shared_ptr<CameraData> cam_data;
+    CameraManager cam_manager;
 
     // G Buffer
     WGPUTexture albedo;

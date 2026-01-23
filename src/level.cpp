@@ -25,11 +25,11 @@ void Karia::Load()
     mesh_manager.LoadMeshFromFile("bunny", "data/models/bunny.obj");
     mesh_manager.LoadMeshFromFile("circle", "data/models/player.obj");
     mesh_manager.LoadMeshFromFile("grass", "data/models/grass.obj");
-    mesh_manager.LoadMeshFromFile("dingus", "data/models/dingus.obj");
     mesh_manager.LoadMeshFromFile("cross", "data/models/grave.obj");
     mesh_manager.LoadMeshFromFile("floor", "data/models/square-1x.obj");
     */
 
+    mesh_manager.LoadMeshFromFile("dingus", "data/models/dingus.obj");
     mesh_manager.LoadMeshFromFile("golem", "data/models/kenney/iron_golem.obj");
 
     mesh_manager.LoadMeshFromFile("floor_A", "data/models/tileset/floor_A.obj");
@@ -93,7 +93,8 @@ void Karia::Load()
     outrobixo.add_component<Shader>("basic_3");
     outrobixo.add_component<Mesh>("dingus");
     outrobixo.add_component<Sprite>("dingus");
-    outrobixo.get_component<Transform>().SetScale(0.25f, 0.25f, 0.25f);
+    outrobixo.add_component<Grid>();
+    outrobixo.get_component<Transform>().SetScale(0.05f, 0.05f, 0.05f);
 
 
     //plane.get_component<Transform>().SetRotation(0.15f, 0.15f, 0.15f);
@@ -103,9 +104,9 @@ void Karia::Load()
     cam.add_component<Camera>(player);
 
 
-    for (int j = 0; j < 5; j++)
+    for (int j = 0; j < 2; j++)
     {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 2; i++)
         {
             std::string name = "floor" + std::to_string(i);
             Entity floor = Entity(name);
@@ -123,7 +124,7 @@ void Karia::Load()
     entity_manager.add_entitity(player);
     entity_manager.add_entitity(cam);
     //entity_manager.add_entitity(grass);
-    //entity_manager.add_entitity(outrobixo);
+    entity_manager.add_entitity(outrobixo);
     //entity_manager.add_entitity(cross);
 
     auto movement_system = std::make_shared<MovementSystem>(&entity_manager);

@@ -1,4 +1,6 @@
 #include "SDL3/SDL_scancode.h"
+#include "glm/gtc/type_ptr.hpp"
+#include "kwgpu/camera.h"
 #include "kwgpu/components.h"
 #include "kwgpu/sprite_manager.h"
 #include "webgpu/webgpu.h"
@@ -8,6 +10,7 @@
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_wgpu.h>
 
+#include <memory>
 #include <sdl3webgpu.h>
 #include <iostream>
 
@@ -19,6 +22,7 @@
 // Systems
 #include <kwgpu/systems/movement.h>
 
+#include <kwgpu/camera.h>
 
 
 #define SDL_MAIN_HANDLED
@@ -39,7 +43,7 @@ void Karia::Start()
         exit(EXIT_FAILURE);
     }
 
-    window = SDL_CreateWindow("Hello Karia", 1920, 1080, 0);
+    window = SDL_CreateWindow("Hello Karia", 800, 600, 0);
     if (!window)
     {
         std::cerr << "Error: Unable to create window." << std::endl;
@@ -182,6 +186,8 @@ void Karia::Start()
     init_info.DepthStencilFormat = WGPUTextureFormat_Depth24Plus;
     ImGui_ImplWGPU_Init(&init_info);
 
+    // Settings
+    cam_data = std::make_shared<CameraData>();
 
     // Load Game
     Load();
@@ -276,7 +282,7 @@ void Karia::Draw()
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
 
-    float aspect = 1920.0f / 1080.0f;
+    float aspect = 800.0f / 600.0f;
     static float zoom = 5.0f;
 
     const bool *key_states = SDL_GetKeyboardState(nullptr);
@@ -294,6 +300,29 @@ void Karia::Draw()
             -100.0f,
             100.0f
     );
+
+    cam_data->ProjectionMatrix = projection;
+    cam_data->ViewMatrix = view;
+
+
+    glm::vec2 mouse;
+    //Ray ray = {};
+    SDL_GetMouseState(&mouse.x, &mouse.y);
+    //Ray ray = cam_manager.ray(mouse, glm::vec2(800, 600));
+
+
+    cam_manager.cam_data = cam_data;
+
+    Ray ray = cam_manager.ray(mouse, glm::vec2(800, 600));
+
+    glm::vec3 intersect = cam_manager.RayIntersectPlane(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), ray.position, ray.direction);
+    std::cout << "Eye " << eye.x << " " << eye.y << " " << eye.z << std::endl;
+    std::cout << ray.position.x << " " << ray.position.y << " " << ray.position.z << std::endl;
+    std::cout << "Dir " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
+    //std::cout << mouse.x << " " << mouse.y << std::endl;
+    std::cout << "Intersect " << intersect.x << " " << intersect.y << " " << intersect.z << std::endl;
+    std::cout << std::endl;
+
 
     // Render System
     for (auto &e : entity_manager.get_entities())
@@ -313,6 +342,10 @@ void Karia::Draw()
 
             // Components
             Transform transform = e.get_component<Transform>();
+
+            if (e.has_component<Grid>())
+                transform.position = intersect;
+            //Transform transform = e.get_component<Transform>()
 
             // Transformations
             glm::mat4 model = glm::mat4(1.0f);

@@ -40,6 +40,11 @@ struct Keyboard
 
 };
 
+struct Grid
+{
+
+};
+
 struct UISprite
 {
     std::string uisprite_name;
