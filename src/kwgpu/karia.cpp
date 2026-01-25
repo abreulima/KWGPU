@@ -1,9 +1,11 @@
+#include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_scancode.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "kwgpu/camera.h"
 #include "kwgpu/components.h"
 #include "kwgpu/sprite_manager.h"
 #include "webgpu/webgpu.h"
+#include <cmath>
 #include <kwgpu/karia.h>
 
 #include <imgui.h>
@@ -303,6 +305,7 @@ void Karia::Draw()
 
     cam_data->ProjectionMatrix = projection;
     cam_data->ViewMatrix = view;
+    cam_data->eye = eye;
 
 
     glm::vec2 mouse;
@@ -316,12 +319,12 @@ void Karia::Draw()
     Ray ray = cam_manager.ray(mouse, glm::vec2(800, 600));
 
     glm::vec3 intersect = cam_manager.RayIntersectPlane(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), ray.position, ray.direction);
-    std::cout << "Eye " << eye.x << " " << eye.y << " " << eye.z << std::endl;
-    std::cout << ray.position.x << " " << ray.position.y << " " << ray.position.z << std::endl;
-    std::cout << "Dir " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
+    //std::cout << "Eye " << eye.x << " " << eye.y << " " << eye.z << std::endl;
+    //std::cout << "Pos\t" << ray.position.x << " " << ray.position.y << " " << ray.position.z << std::endl;
+    //std::cout << "Dir\t " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
     //std::cout << mouse.x << " " << mouse.y << std::endl;
     std::cout << "Intersect " << intersect.x << " " << intersect.y << " " << intersect.z << std::endl;
-    std::cout << std::endl;
+    //std::cout << std::endl;
 
 
     // Render System
@@ -344,7 +347,13 @@ void Karia::Draw()
             Transform transform = e.get_component<Transform>();
 
             if (e.has_component<Grid>())
+            {
+                intersect.x = floor(intersect.x);
+                intersect.z = floor(intersect.z);
+                intersect.t = 0.001f;
+
                 transform.position = intersect;
+            }
             //Transform transform = e.get_component<Transform>()
 
             // Transformations

@@ -30,6 +30,7 @@ void Karia::Load()
     */
 
     mesh_manager.LoadMeshFromFile("dingus", "data/models/dingus.obj");
+    mesh_manager.LoadMeshFromFile("grid", "data/models/grid.obj");
     mesh_manager.LoadMeshFromFile("golem", "data/models/kenney/iron_golem.obj");
 
     mesh_manager.LoadMeshFromFile("floor_A", "data/models/tileset/floor_A.obj");
@@ -91,10 +92,10 @@ void Karia::Load()
     Entity outrobixo = Entity("Gato");
     outrobixo.add_component<Transform>(0.0f, 0.0f, 0.0f);
     outrobixo.add_component<Shader>("basic_3");
-    outrobixo.add_component<Mesh>("dingus");
-    outrobixo.add_component<Sprite>("dingus");
+    outrobixo.add_component<Mesh>("grid");
+    outrobixo.add_component<Sprite>("variation-a");
     outrobixo.add_component<Grid>();
-    outrobixo.get_component<Transform>().SetScale(0.05f, 0.05f, 0.05f);
+    //outrobixo.get_component<Transform>().SetScale(0.05f, 0.05f, 0.05f);
 
 
     //plane.get_component<Transform>().SetRotation(0.15f, 0.15f, 0.15f);

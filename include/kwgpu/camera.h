@@ -10,6 +10,7 @@ struct CameraData
 {
     glm::mat4 ProjectionMatrix;
     glm::mat4 ViewMatrix;
+    glm::vec3 eye;
 };
 
 struct Ray
